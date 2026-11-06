@@ -35,4 +35,4 @@ This addon adds Skipper-style **SKIP** buttons (and an optional **FINISH** butto
 
 ## License
 
-NCSA Open Source License.
+MIT License.
