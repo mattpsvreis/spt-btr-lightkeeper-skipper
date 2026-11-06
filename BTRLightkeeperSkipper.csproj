@@ -10,7 +10,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Deterministic>true</Deterministic>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -20,6 +20,12 @@
     <TarkovBepInExCoreDir>$(TarkovDir)BepInEx\core\</TarkovBepInExCoreDir>
     <PluginFolderName>Dark-BTRLightkeeperSkipper</PluginFolderName>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Server\**" />
+    <None Include="Server\**" />
+    <EmbeddedResource Remove="Server\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <Reference Include="0Harmony">
@@ -85,16 +91,23 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="Build">
+    <PropertyGroup>
+      <ServerModDll>$(ProjectDir)Server\bin\$(Configuration)\Dark-BTRLightkeeperSkipper.dll</ServerModDll>
+    </PropertyGroup>
+
     <ItemGroup>
       <OutputDLL Include="$(TargetPath)" />
       <License Include="$(ProjectDir)LICENSE" Condition="Exists('$(ProjectDir)LICENSE')" />
       <Readme Include="$(ProjectDir)README.md" Condition="Exists('$(ProjectDir)README.md')" />
+      <ServerDLL Include="$(ServerModDll)" Condition="Exists('$(ServerModDll)')" />
     </ItemGroup>
 
     <Copy SourceFiles="@(OutputDLL);@(License);@(Readme)" DestinationFolder="$(TarkovDir)BepInEx\plugins\$(PluginFolderName)\" />
+    <Copy SourceFiles="@(ServerDLL)" DestinationFolder="$(TarkovDir)SPT_Runtime\user\mods\$(PluginFolderName)\" Condition="'@(ServerDLL)' != ''" />
 
     <RemoveDir Directories="$(ProjectDir)release" />
     <Copy SourceFiles="@(OutputDLL);@(License);@(Readme)" DestinationFolder="$(ProjectDir)release\$(PluginFolderName)\BepInEx\plugins\$(PluginFolderName)\" />
+    <Copy SourceFiles="@(ServerDLL);@(License);@(Readme)" DestinationFolder="$(ProjectDir)release\$(PluginFolderName)\SPT_Runtime\user\mods\$(PluginFolderName)\" Condition="'@(ServerDLL)' != ''" />
     <ZipDirectory SourceDirectory="$(ProjectDir)release\$(PluginFolderName)\" DestinationFile="$(ProjectDir)release\$(PluginFolderName)-$(Version).zip" />
   </Target>
 </Project>

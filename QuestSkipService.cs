@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Linq;
 using System.Reflection;
+using Dark.BTRLightkeeperSkipper.Patches;
 using EFT;
 using EFT.Quests;
 using EFT.UI;
@@ -115,8 +117,60 @@ namespace Dark.BTRLightkeeperSkipper
                 return;
             }
 
+            if (Plugin.Instance == null)
+            {
+                Plugin.Logger.LogError("Plugin instance missing; cannot finish quest on main thread.");
+                return;
+            }
+
             Plugin.Logger.LogInfo($"Finishing quest {quest.Id} ({quest.Template?.Name}) from Tasks menu");
-            questController.FinishQuest(quest, runNetworkTransaction: true);
+            Plugin.Instance.StartCoroutine(FinishQuestAndRefreshTasks(questController, quest));
+        }
+
+        private static IEnumerator FinishQuestAndRefreshTasks(QuestController questController, Quest quest)
+        {
+            var finishTask = questController.FinishQuest(quest, runNetworkTransaction: true);
+            while (finishTask != null && !finishTask.IsCompleted)
+            {
+                yield return null;
+            }
+
+            if (finishTask == null)
+            {
+                Plugin.Logger.LogError($"FinishQuest returned null for quest {quest.Id}");
+                yield break;
+            }
+
+            if (finishTask.IsFaulted)
+            {
+                Plugin.Logger.LogError($"FinishQuest failed for quest {quest.Id}: {finishTask.Exception?.Flatten().Message}");
+                yield break;
+            }
+
+            // Let profile/UI listeners apply the Success status before rebuilding the list.
+            yield return null;
+            RefreshTasksPanel();
+        }
+
+        internal static void RefreshTasksPanel()
+        {
+            var panel = Object.FindObjectOfType<TasksPanel>();
+            if (panel == null)
+            {
+                Plugin.Logger.LogDebug("TasksPanel not found; skipping Tasks menu refresh.");
+                return;
+            }
+
+            var showQuests = AccessTools.Method(typeof(TasksPanel), "ShowQuests", [typeof(Func<Quest, bool>)]);
+            if (showQuests == null)
+            {
+                Plugin.Logger.LogWarning("Could not find TasksPanel.ShowQuests for UI refresh.");
+                return;
+            }
+
+            Plugin.Logger.LogDebug("Refreshing TasksPanel after quest finish");
+            showQuests.Invoke(panel, [new Func<Quest, bool>(_ => true)]);
+            QuestObjectiveViewPatch.LastSeenObjectivesBlock = null;
         }
 
         private static void ResolveQuestControllerClass()

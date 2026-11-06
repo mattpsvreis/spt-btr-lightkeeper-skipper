@@ -84,11 +84,11 @@ namespace Dark.BTRLightkeeperSkipper.Patches
             QuestObjectiveViewPatch.LastSeenObjectivesBlock = description.gameObject;
 
             finishButton.OnClick.AddListener(() => ItemUiContext.Instance.ShowMessageWindow(
-                description: "Are you sure you want to finish this quest and claim rewards?",
+                description: "Are you sure you want to finish this quest and claim rewards via trader message?",
                 acceptAction: () =>
                 {
-                    QuestSkipService.FinishQuest(questController, quest);
                     finishButton.gameObject.SetActive(false);
+                    QuestSkipService.FinishQuest(questController, quest);
                 },
                 cancelAction: () => { },
                 caption: "Confirmation"));

@@ -16,11 +16,12 @@ namespace Dark.BTRLightkeeperSkipper
     {
         public const string PluginGuid = "com.dark.btrlightkeeperskipper";
         public const string PluginName = "Dark-BTRLightkeeperSkipper";
-        public const string PluginVersion = "1.0.0";
+        public const string PluginVersion = "1.1.0";
 
         internal const string SkipButtonName = "BTRLightkeeperSkipper_SkipButton";
         internal const string FinishButtonName = "BTRLightkeeperSkipper_FinishButton";
 
+        internal static Plugin Instance { get; private set; }
         internal new static ManualLogSource Logger { get; private set; }
 
         private const string MainSectionName = "Main";
@@ -32,6 +33,7 @@ namespace Dark.BTRLightkeeperSkipper
         [UsedImplicitly]
         private void Awake()
         {
+            Instance = this;
             Logger = base.Logger;
             InitConfiguration();
 
